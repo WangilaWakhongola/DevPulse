@@ -1,0 +1,679 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>DevPulse — GitHub Dashboard</title>
+  <link href="https://fonts.googleapis.com/css2?family=Space+Mono:wght@400;700&family=Syne:wght@400;600;800&display=swap" rel="stylesheet" />
+  <style>
+    :root {
+      --bg: #080c10;
+      --surface: #0e1318;
+      --border: #1c2730;
+      --accent: #00f5a0;
+      --accent2: #00c2ff;
+      --warn: #ff6b35;
+      --text: #cdd9e5;
+      --muted: #546e7a;
+      --card-bg: #0b1117;
+    }
+
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+
+    body {
+      background: var(--bg);
+      color: var(--text);
+      font-family: 'Space Mono', monospace;
+      min-height: 100vh;
+      overflow-x: hidden;
+    }
+
+    /* Grid background */
+    body::before {
+      content: '';
+      position: fixed;
+      inset: 0;
+      background-image:
+        linear-gradient(rgba(0,245,160,0.03) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(0,245,160,0.03) 1px, transparent 1px);
+      background-size: 40px 40px;
+      pointer-events: none;
+      z-index: 0;
+    }
+
+    /* Glow top */
+    body::after {
+      content: '';
+      position: fixed;
+      top: -200px; left: 50%;
+      transform: translateX(-50%);
+      width: 800px; height: 400px;
+      background: radial-gradient(ellipse, rgba(0,245,160,0.06) 0%, transparent 70%);
+      pointer-events: none;
+      z-index: 0;
+    }
+
+    .container {
+      max-width: 1100px;
+      margin: 0 auto;
+      padding: 0 24px;
+      position: relative;
+      z-index: 1;
+    }
+
+    /* Header */
+    header {
+      padding: 32px 0 20px;
+      border-bottom: 1px solid var(--border);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+
+    .logo {
+      font-family: 'Syne', sans-serif;
+      font-weight: 800;
+      font-size: 1.5rem;
+      color: var(--accent);
+      letter-spacing: -0.5px;
+    }
+
+    .logo span { color: var(--text); }
+
+    .status-dot {
+      width: 8px; height: 8px;
+      background: var(--accent);
+      border-radius: 50%;
+      display: inline-block;
+      margin-right: 8px;
+      animation: pulse 2s infinite;
+    }
+
+    @keyframes pulse {
+      0%, 100% { opacity: 1; box-shadow: 0 0 6px var(--accent); }
+      50% { opacity: 0.4; box-shadow: none; }
+    }
+
+    .header-meta {
+      font-size: 0.7rem;
+      color: var(--muted);
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+
+    /* Search */
+    .search-section {
+      padding: 48px 0 32px;
+      text-align: center;
+    }
+
+    .search-label {
+      font-family: 'Syne', sans-serif;
+      font-size: 2.8rem;
+      font-weight: 800;
+      color: var(--text);
+      line-height: 1.1;
+      margin-bottom: 8px;
+    }
+
+    .search-label .highlight {
+      color: var(--accent);
+      text-shadow: 0 0 30px rgba(0,245,160,0.4);
+    }
+
+    .search-subtitle {
+      color: var(--muted);
+      font-size: 0.8rem;
+      margin-bottom: 32px;
+    }
+
+    .search-bar {
+      display: flex;
+      max-width: 520px;
+      margin: 0 auto;
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 4px;
+      overflow: hidden;
+      transition: border-color 0.2s;
+    }
+
+    .search-bar:focus-within {
+      border-color: var(--accent);
+      box-shadow: 0 0 0 3px rgba(0,245,160,0.08);
+    }
+
+    .search-prefix {
+      padding: 14px 16px;
+      color: var(--accent);
+      font-size: 0.9rem;
+      border-right: 1px solid var(--border);
+      white-space: nowrap;
+    }
+
+    .search-bar input {
+      flex: 1;
+      background: transparent;
+      border: none;
+      outline: none;
+      padding: 14px 16px;
+      color: var(--text);
+      font-family: 'Space Mono', monospace;
+      font-size: 0.9rem;
+    }
+
+    .search-bar input::placeholder { color: var(--muted); }
+
+    .search-btn {
+      background: var(--accent);
+      color: var(--bg);
+      border: none;
+      padding: 14px 24px;
+      font-family: 'Syne', sans-serif;
+      font-weight: 700;
+      font-size: 0.85rem;
+      cursor: pointer;
+      transition: background 0.2s, opacity 0.2s;
+      letter-spacing: 0.5px;
+    }
+
+    .search-btn:hover { background: #00dba0; }
+    .search-btn:disabled { opacity: 0.5; cursor: not-allowed; }
+
+    /* Loader */
+    #loader {
+      display: none;
+      text-align: center;
+      padding: 40px;
+      color: var(--accent);
+      font-size: 0.8rem;
+    }
+
+    .loader-bar {
+      width: 200px;
+      height: 2px;
+      background: var(--border);
+      margin: 16px auto 0;
+      border-radius: 2px;
+      overflow: hidden;
+    }
+
+    .loader-bar::after {
+      content: '';
+      display: block;
+      width: 60%;
+      height: 100%;
+      background: var(--accent);
+      animation: slide 1s ease-in-out infinite;
+    }
+
+    @keyframes slide {
+      0% { transform: translateX(-100%); }
+      100% { transform: translateX(250%); }
+    }
+
+    /* Error */
+    #error-msg {
+      display: none;
+      background: rgba(255,107,53,0.1);
+      border: 1px solid rgba(255,107,53,0.3);
+      color: var(--warn);
+      padding: 12px 20px;
+      font-size: 0.8rem;
+      border-radius: 4px;
+      max-width: 520px;
+      margin: 12px auto 0;
+      text-align: center;
+    }
+
+    /* Dashboard */
+    #dashboard { display: none; padding-bottom: 80px; }
+
+    /* Profile card */
+    .profile-card {
+      background: var(--card-bg);
+      border: 1px solid var(--border);
+      border-radius: 6px;
+      padding: 28px;
+      display: flex;
+      gap: 28px;
+      align-items: flex-start;
+      margin-bottom: 24px;
+      position: relative;
+      overflow: hidden;
+    }
+
+    .profile-card::before {
+      content: '';
+      position: absolute;
+      top: 0; left: 0; right: 0;
+      height: 2px;
+      background: linear-gradient(90deg, var(--accent), var(--accent2));
+    }
+
+    .avatar {
+      width: 80px; height: 80px;
+      border-radius: 4px;
+      border: 2px solid var(--border);
+      flex-shrink: 0;
+    }
+
+    .profile-info { flex: 1; }
+
+    .profile-name {
+      font-family: 'Syne', sans-serif;
+      font-size: 1.4rem;
+      font-weight: 800;
+      color: #fff;
+      margin-bottom: 2px;
+    }
+
+    .profile-login { color: var(--accent); font-size: 0.8rem; margin-bottom: 8px; }
+    .profile-bio { color: var(--muted); font-size: 0.78rem; margin-bottom: 16px; line-height: 1.5; }
+
+    .profile-meta {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 16px;
+    }
+
+    .meta-item {
+      display: flex;
+      flex-direction: column;
+      gap: 2px;
+    }
+
+    .meta-value {
+      font-family: 'Syne', sans-serif;
+      font-size: 1.1rem;
+      font-weight: 700;
+      color: #fff;
+    }
+
+    .meta-label { font-size: 0.65rem; color: var(--muted); text-transform: uppercase; letter-spacing: 1px; }
+
+    .profile-link {
+      margin-left: auto;
+      align-self: flex-start;
+    }
+
+    .btn-outline {
+      border: 1px solid var(--border);
+      background: transparent;
+      color: var(--text);
+      padding: 8px 16px;
+      font-family: 'Space Mono', monospace;
+      font-size: 0.75rem;
+      cursor: pointer;
+      border-radius: 4px;
+      text-decoration: none;
+      display: inline-block;
+      transition: border-color 0.2s, color 0.2s;
+    }
+
+    .btn-outline:hover { border-color: var(--accent); color: var(--accent); }
+
+    /* Grid layout */
+    .grid-2 {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 24px;
+      margin-bottom: 24px;
+    }
+
+    @media (max-width: 720px) {
+      .grid-2 { grid-template-columns: 1fr; }
+      .profile-card { flex-direction: column; }
+      .search-label { font-size: 2rem; }
+    }
+
+    /* Section */
+    .section-title {
+      font-family: 'Syne', sans-serif;
+      font-size: 0.7rem;
+      font-weight: 700;
+      color: var(--muted);
+      text-transform: uppercase;
+      letter-spacing: 2px;
+      margin-bottom: 12px;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .section-title::after {
+      content: '';
+      flex: 1;
+      height: 1px;
+      background: var(--border);
+    }
+
+    /* Repo card */
+    .repo-card {
+      background: var(--card-bg);
+      border: 1px solid var(--border);
+      border-radius: 6px;
+      padding: 18px;
+      margin-bottom: 10px;
+      transition: border-color 0.2s, transform 0.15s;
+      cursor: pointer;
+      text-decoration: none;
+      display: block;
+      color: inherit;
+    }
+
+    .repo-card:hover {
+      border-color: var(--accent);
+      transform: translateX(4px);
+    }
+
+    .repo-name {
+      font-family: 'Syne', sans-serif;
+      font-size: 0.95rem;
+      font-weight: 700;
+      color: var(--accent2);
+      margin-bottom: 4px;
+    }
+
+    .repo-desc {
+      font-size: 0.72rem;
+      color: var(--muted);
+      margin-bottom: 10px;
+      line-height: 1.4;
+    }
+
+    .repo-meta {
+      display: flex;
+      gap: 12px;
+      font-size: 0.7rem;
+      color: var(--muted);
+      align-items: center;
+      flex-wrap: wrap;
+    }
+
+    .lang-dot {
+      width: 8px; height: 8px;
+      border-radius: 50%;
+      background: var(--accent);
+      display: inline-block;
+      margin-right: 4px;
+    }
+
+    .tag {
+      background: rgba(0,194,255,0.08);
+      border: 1px solid rgba(0,194,255,0.15);
+      color: var(--accent2);
+      padding: 2px 8px;
+      border-radius: 2px;
+      font-size: 0.65rem;
+    }
+
+    /* Stats panel */
+    .stats-panel {
+      background: var(--card-bg);
+      border: 1px solid var(--border);
+      border-radius: 6px;
+      padding: 24px;
+    }
+
+    .stat-row {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 10px 0;
+      border-bottom: 1px solid var(--border);
+      font-size: 0.8rem;
+    }
+
+    .stat-row:last-child { border-bottom: none; }
+
+    .stat-key { color: var(--muted); }
+
+    .stat-val {
+      font-family: 'Syne', sans-serif;
+      font-weight: 700;
+      color: #fff;
+    }
+
+    /* Language bars */
+    .lang-bar-row { margin-bottom: 10px; }
+
+    .lang-bar-label {
+      display: flex;
+      justify-content: space-between;
+      font-size: 0.72rem;
+      margin-bottom: 4px;
+    }
+
+    .lang-bar-track {
+      height: 4px;
+      background: var(--border);
+      border-radius: 2px;
+      overflow: hidden;
+    }
+
+    .lang-bar-fill {
+      height: 100%;
+      background: linear-gradient(90deg, var(--accent), var(--accent2));
+      border-radius: 2px;
+      transition: width 0.8s ease;
+    }
+
+    /* Activity feed */
+    .activity-panel {
+      background: var(--card-bg);
+      border: 1px solid var(--border);
+      border-radius: 6px;
+      padding: 24px;
+    }
+
+    .activity-item {
+      display: flex;
+      gap: 14px;
+      padding: 10px 0;
+      border-bottom: 1px solid var(--border);
+      align-items: flex-start;
+    }
+
+    .activity-item:last-child { border-bottom: none; }
+
+    .activity-icon {
+      width: 28px; height: 28px;
+      background: rgba(0,245,160,0.08);
+      border: 1px solid rgba(0,245,160,0.15);
+      border-radius: 4px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 0.8rem;
+      flex-shrink: 0;
+    }
+
+    .activity-text { flex: 1; }
+    .activity-repo { font-size: 0.75rem; color: var(--accent2); font-weight: 700; }
+    .activity-desc { font-size: 0.7rem; color: var(--muted); margin-top: 2px; }
+    .activity-time { font-size: 0.65rem; color: var(--border); margin-top: 2px; }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <header>
+      <div class="logo">Dev<span>Pulse</span></div>
+      <div class="header-meta">
+        <span><span class="status-dot"></span>LIVE</span>
+        <span>GitHub API</span>
+      </div>
+    </header>
+
+    <section class="search-section">
+      <h1 class="search-label">Your GitHub,<br><span class="highlight">decoded.</span></h1>
+      <p class="search-subtitle">// enter a username to analyze any developer's profile</p>
+      <div class="search-bar">
+        <span class="search-prefix">github.com /</span>
+        <input type="text" id="username-input" placeholder="torvalds" autocomplete="off" />
+        <button class="search-btn" id="search-btn" onclick="loadDashboard()">SCAN →</button>
+      </div>
+      <div id="error-msg"></div>
+    </section>
+
+    <div id="loader">
+      <span>// fetching developer data...</span>
+      <div class="loader-bar"></div>
+    </div>
+
+    <div id="dashboard">
+      <!-- Profile -->
+      <div id="profile-card" class="profile-card"></div>
+
+      <!-- Repos + Stats -->
+      <div class="grid-2">
+        <div>
+          <div class="section-title">// top repositories</div>
+          <div id="repos-list"></div>
+        </div>
+        <div>
+          <div class="section-title">// language breakdown</div>
+          <div id="lang-stats" class="stats-panel" style="margin-bottom:24px"></div>
+          <div class="section-title">// quick stats</div>
+          <div id="quick-stats" class="stats-panel"></div>
+        </div>
+      </div>
+
+      <!-- Activity -->
+      <div class="section-title">// recent activity</div>
+      <div id="activity-feed" class="activity-panel"></div>
+    </div>
+  </div>
+
+  <script>
+    const input = document.getElementById('username-input');
+    input.addEventListener('keydown', e => { if (e.key === 'Enter') loadDashboard(); });
+
+    const ICONS = {
+      PushEvent: '⬆', CreateEvent: '✦', WatchEvent: '★',
+      ForkEvent: '⑂', IssuesEvent: '⚑', PullRequestEvent: '⟳', default: '◆'
+    };
+
+    function timeAgo(dateStr) {
+      const diff = (Date.now() - new Date(dateStr)) / 1000;
+      if (diff < 60) return `${Math.floor(diff)}s ago`;
+      if (diff < 3600) return `${Math.floor(diff/60)}m ago`;
+      if (diff < 86400) return `${Math.floor(diff/3600)}h ago`;
+      return `${Math.floor(diff/86400)}d ago`;
+    }
+
+    function langColor(lang) {
+      const colors = { JavaScript:'#f7df1e', Python:'#3572A5', TypeScript:'#2b7489',
+        Go:'#00ADD8', Rust:'#dea584', Ruby:'#701516', Java:'#b07219', 'C++':'#f34b7d',
+        CSS:'#563d7c', HTML:'#e34c26', Shell:'#89e051' };
+      return colors[lang] || '#00f5a0';
+    }
+
+    async function loadDashboard() {
+      const username = input.value.trim();
+      if (!username) return;
+
+      document.getElementById('loader').style.display = 'block';
+      document.getElementById('dashboard').style.display = 'none';
+      document.getElementById('error-msg').style.display = 'none';
+      document.getElementById('search-btn').disabled = true;
+
+      try {
+        const [profile, repos, activity, stats] = await Promise.all([
+          fetch(`/api/github/${username}/profile`).then(r => r.json()),
+          fetch(`/api/github/${username}/repos?limit=6`).then(r => r.json()),
+          fetch(`/api/github/${username}/activity`).then(r => r.json()),
+          fetch(`/api/github/${username}/stats`).then(r => r.json()),
+        ]);
+
+        if (!profile.success) throw new Error(profile.error);
+
+        renderProfile(profile.data);
+        renderRepos(repos.data);
+        renderStats(stats.data);
+        renderActivity(activity.data);
+
+        document.getElementById('loader').style.display = 'none';
+        document.getElementById('dashboard').style.display = 'block';
+
+      } catch (err) {
+        document.getElementById('loader').style.display = 'none';
+        const errEl = document.getElementById('error-msg');
+        errEl.textContent = `// error: ${err.message}`;
+        errEl.style.display = 'block';
+      } finally {
+        document.getElementById('search-btn').disabled = false;
+      }
+    }
+
+    function renderProfile(p) {
+      document.getElementById('profile-card').innerHTML = `
+        <img class="avatar" src="${p.avatar}" alt="${p.login}" />
+        <div class="profile-info">
+          <div class="profile-name">${p.name || p.login}</div>
+          <div class="profile-login">@${p.login}${p.location ? ` · ${p.location}` : ''}</div>
+          <div class="profile-bio">${p.bio || '// no bio provided'}</div>
+          <div class="profile-meta">
+            <div class="meta-item"><span class="meta-value">${p.publicRepos}</span><span class="meta-label">Repos</span></div>
+            <div class="meta-item"><span class="meta-value">${p.followers}</span><span class="meta-label">Followers</span></div>
+            <div class="meta-item"><span class="meta-value">${p.following}</span><span class="meta-label">Following</span></div>
+            <div class="meta-item"><span class="meta-value">${new Date(p.createdAt).getFullYear()}</span><span class="meta-label">Member Since</span></div>
+          </div>
+        </div>
+        <a class="btn-outline profile-link" href="${p.url}" target="_blank">View on GitHub ↗</a>
+      `;
+    }
+
+    function renderRepos(repos) {
+      document.getElementById('repos-list').innerHTML = repos.map(r => `
+        <a class="repo-card" href="${r.url}" target="_blank">
+          <div class="repo-name">${r.name}</div>
+          <div class="repo-desc">${r.description || '// no description'}</div>
+          <div class="repo-meta">
+            ${r.language ? `<span><span class="lang-dot" style="background:${langColor(r.language)}"></span>${r.language}</span>` : ''}
+            <span>★ ${r.stars}</span>
+            <span>⑂ ${r.forks}</span>
+            ${r.topics.slice(0,2).map(t => `<span class="tag">${t}</span>`).join('')}
+          </div>
+        </a>
+      `).join('');
+    }
+
+    function renderStats(stats) {
+      const maxLang = stats.topLanguages[0]?.count || 1;
+      document.getElementById('lang-stats').innerHTML = stats.topLanguages.map(l => `
+        <div class="lang-bar-row">
+          <div class="lang-bar-label">
+            <span style="color:${langColor(l.lang)}">${l.lang}</span>
+            <span style="color:var(--muted);font-size:0.65rem">${l.count} repo${l.count > 1 ? 's' : ''}</span>
+          </div>
+          <div class="lang-bar-track">
+            <div class="lang-bar-fill" style="width:${Math.round(l.count/maxLang*100)}%"></div>
+          </div>
+        </div>
+      `).join('') || '<span style="color:var(--muted);font-size:0.75rem">// no language data</span>';
+
+      document.getElementById('quick-stats').innerHTML = `
+        <div class="stat-row"><span class="stat-key">total repos</span><span class="stat-val">${stats.totalRepos}</span></div>
+        <div class="stat-row"><span class="stat-key">total stars earned</span><span class="stat-val">★ ${stats.totalStars}</span></div>
+        <div class="stat-row"><span class="stat-key">total forks</span><span class="stat-val">⑂ ${stats.totalForks}</span></div>
+        <div class="stat-row"><span class="stat-key">languages used</span><span class="stat-val">${stats.topLanguages.length}</span></div>
+      `;
+    }
+
+    function renderActivity(activity) {
+      document.getElementById('activity-feed').innerHTML = activity.map(a => `
+        <div class="activity-item">
+          <div class="activity-icon">${ICONS[a.type] || ICONS.default}</div>
+          <div class="activity-text">
+            <div class="activity-repo">${a.repo}</div>
+            <div class="activity-desc">${a.payload}</div>
+            <div class="activity-time">${timeAgo(a.createdAt)}</div>
+          </div>
+        </div>
+      `).join('') || '<span style="color:var(--muted);font-size:0.75rem">// no recent public activity</span>';
+    }
+  </script>
+</body>
+</html>
