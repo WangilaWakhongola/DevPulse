@@ -1,4 +1,4 @@
-# 🚀 DevPulse — GitHub Activity Dashboard
+#  DevPulse — GitHub Activity Dashboard
 
 > A real-time GitHub developer dashboard built with Node.js & Express.  
 > Search any GitHub username and instantly visualize their profile, repositories, language stats, and activity feed.
@@ -9,18 +9,18 @@
 
 ---
 
-## ✨ Features
+## Features
 
-- 🔍 **Profile Overview** — Avatar, bio, location, follower/following count
-- 📦 **Top Repositories** — Most recently updated repos with language, stars, forks & topics
-- 📊 **Language Breakdown** — Visual bar chart of your most-used languages
-- ⚡ **Activity Feed** — Real-time public events (pushes, PRs, stars, forks)
-- 🛡️ **Rate Limiting & Caching** — Protects GitHub API limits with 5-min response cache
-- 🔒 **Security Headers** — Powered by Helmet.js
+- **Profile Overview** — Avatar, bio, location, follower/following count
+- **Top Repositories** — Most recently updated repos with language, stars, forks & topics
+- **Language Breakdown** — Visual bar chart of your most-used languages
+- **Activity Feed** — Real-time public events (pushes, PRs, stars, forks)
+- **Rate Limiting & Caching** — Protects GitHub API limits with 5-min response cache
+- **Security Headers** — Powered by Helmet.js
 
 ---
 
-## 🗂️ Project Structure
+## Project Structure
 
 ```
 devpulse/
@@ -73,7 +73,7 @@ PORT=3000
 GITHUB_TOKEN=ghp_your_personal_access_token
 ```
 
-> 💡 Generate a token at: **GitHub → Settings → Developer Settings → Personal Access Tokens**  
+> Generate a token at: **GitHub → Settings → Developer Settings → Personal Access Tokens**  
 > Only `public_repo` read scope is needed.
 
 ### 4. Run the app
@@ -90,7 +90,7 @@ Open **http://localhost:3000** in your browser.
 
 ---
 
-## 🔌 API Endpoints
+## API Endpoints
 
 | Method | Endpoint | Description |
 |--------|----------|-------------|
@@ -105,7 +105,7 @@ Open **http://localhost:3000** in your browser.
 
 ---
 
-## 🧠 How It Works
+## How It Works
 
 1. **Frontend** sends requests to the Express API with the GitHub username
 2. **Controller** receives the request and delegates to the **Service** layer
@@ -114,7 +114,7 @@ Open **http://localhost:3000** in your browser.
 
 ---
 
-## 🚀 Ideas to Extend
+## Ideas to Extend
 
 - [ ] Add contribution graph using GitHub's contribution API
 - [ ] Compare two developers side-by-side
@@ -124,6 +124,6 @@ Open **http://localhost:3000** in your browser.
 
 ---
 
-## 📄 License
+## License
 
 MIT — feel free to fork and build on top of this!
