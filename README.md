@@ -1,11 +1,9 @@
-#  DevPulse — GitHub Activity Dashboard
+# DevPulse — GitHub Activity Dashboard
 
-> A real-time GitHub developer dashboard built with Node.js & Express.  
-> Search any GitHub username and instantly visualize their profile, repositories, language stats, and activity feed.
+A real-time GitHub developer dashboard built with **Python & Flask**.  
+Search any GitHub username and instantly visualize their profile, repositories, language stats, and activity feed.
 
-![Node.js](https://img.shields.io/badge/Node.js-18%2B-green?style=flat-square)
-![Express](https://img.shields.io/badge/Express-4.x-blue?style=flat-square)
-![License](https://img.shields.io/badge/license-MIT-yellow?style=flat-square)
+> Python rewrite of the original Node.js/Express version.
 
 ---
 
@@ -13,10 +11,11 @@
 
 - **Profile Overview** — Avatar, bio, location, follower/following count
 - **Top Repositories** — Most recently updated repos with language, stars, forks & topics
-- **Language Breakdown** — Visual bar chart of your most-used languages
-- **Activity Feed** — Real-time public events (pushes, PRs, stars, forks)
-- **Rate Limiting & Caching** — Protects GitHub API limits with 5-min response cache
-- **Security Headers** — Powered by Helmet.js
+- **Language Breakdown** — Visual bar chart of most-used languages across all repos
+- **Activity Feed** — Real-time public events (pushes, PRs, stars, forks, etc.)
+- **Rate Limiting** — 100 requests per 15 minutes per IP (via Flask-Limiter)
+- **In-Memory Caching** — 5-minute TTL cache to protect GitHub API rate limits
+- **Security Headers** — X-Content-Type-Options, X-Frame-Options, XSS Protection, etc.
 
 ---
 
@@ -25,65 +24,70 @@
 ```
 devpulse/
 ├── src/
-│   ├── app.js                  # Express entry point
+│   ├── app.py                        # Flask entry point
 │   ├── routes/
-│   │   └── github.js           # API route definitions
+│   │   └── github.py                 # URL route definitions
 │   ├── controllers/
-│   │   └── githubController.js # Request handlers
+│   │   └── github_controller.py      # Request handlers
 │   ├── services/
-│   │   └── githubService.js    # GitHub API calls + caching
+│   │   └── github_service.py         # GitHub API calls + caching
 │   └── middleware/
-│       ├── errorHandler.js     # Global error handler
-│       └── rateLimiter.js      # Request rate limiting
+│       ├── error_handler.py          # Global error handler
+│       └── rate_limiter.py           # Request rate limiting
 ├── public/
-│   └── index.html              # Frontend (single-file SPA)
+│   └── index.html                    # Frontend single-page app
+├── requirements.txt
 ├── .env.example
 ├── .gitignore
-├── package.json
 └── README.md
 ```
 
 ---
 
-## 🛠️ Getting Started
+## Getting Started
 
-### 1. Clone the repo
-
-```bash
-git clone https://github.com/YOUR_USERNAME/devpulse.git
-cd devpulse
-```
-
-### 2. Install dependencies
+### 1. Clone the repository
 
 ```bash
-npm install
+git clone https://github.com/YOUR_USERNAME/DevPulse.git
+cd DevPulse
 ```
 
-### 3. Set up environment variables
+### 2. Create a virtual environment
+
+```bash
+python -m venv venv
+source venv/bin/activate      # On Windows: venv\Scripts\activate
+```
+
+### 3. Install dependencies
+
+```bash
+pip install -r requirements.txt
+```
+
+### 4. Set up environment variables
 
 ```bash
 cp .env.example .env
 ```
 
-Edit `.env` and add your GitHub token (optional but recommended to avoid rate limits):
+Edit `.env` and optionally add your GitHub token:
 
 ```
 PORT=3000
-GITHUB_TOKEN=ghp_your_personal_access_token
+GITHUB_TOKEN=ghp_your_personal_access_token_here
+FLASK_ENV=development
 ```
 
 > Generate a token at: **GitHub → Settings → Developer Settings → Personal Access Tokens**  
-> Only `public_repo` read scope is needed.
+> Only the `public_repo` read scope is needed. Without a token, GitHub limits you to 60 requests/hour; with one, it's 5000/hour.
 
-### 4. Run the app
+### 5. Run the app
 
 ```bash
-# Development (with auto-reload)
-npm run dev
-
-# Production
-npm start
+# From the project root
+python src/app.py
 ```
 
 Open **http://localhost:3000** in your browser.
@@ -97,9 +101,10 @@ Open **http://localhost:3000** in your browser.
 | GET | `/api/github/:username/profile` | User profile data |
 | GET | `/api/github/:username/repos` | Public repositories |
 | GET | `/api/github/:username/activity` | Recent public events |
-| GET | `/api/github/:username/stats` | Aggregated stats & languages |
+| GET | `/api/github/:username/stats` | Aggregated stats & language breakdown |
 
 **Query params for `/repos`:**
+
 - `sort` — `updated` (default), `stars`, `created`
 - `limit` — number of repos to return (default: `6`)
 
@@ -107,22 +112,43 @@ Open **http://localhost:3000** in your browser.
 
 ## How It Works
 
-1. **Frontend** sends requests to the Express API with the GitHub username
-2. **Controller** receives the request and delegates to the **Service** layer
-3. **Service** checks the in-memory **cache** (5 min TTL) before hitting the GitHub API
-4. Results are returned as JSON and rendered dynamically on the page
+1. The **frontend** (`public/index.html`) sends fetch requests to the Flask API with a GitHub username
+2. The **routes** map URL patterns to controller functions
+3. The **controller** validates the request and delegates to the **service** layer
+4. The **service** checks an in-memory **cache** (5-min TTL) before calling the GitHub REST API
+5. Results are returned as JSON and rendered dynamically in the browser
+
+---
+
+## Comparison with Original
+
+| Feature | Original (Node.js) | This Version (Python) |
+|---|---|---|
+| Runtime | Node.js 18+ | Python 3.8+ |
+| Framework | Express 4.x | Flask 3.x |
+| HTTP client | Axios | Requests |
+| Caching | node-cache | In-memory dict with TTL |
+| Rate limiting | express-rate-limit | Flask-Limiter |
+| Security headers | Helmet.js | Custom after_request hook |
+| Config | dotenv (npm) | python-dotenv |
 
 ---
 
 ## Ideas to Extend
 
-- [ ] Add contribution graph using GitHub's contribution API
+- [ ] Contribution graph using GitHub's contribution API
 - [ ] Compare two developers side-by-side
-- [ ] Export profile as PDF / PNG card
-- [ ] Add OAuth login to view private repo stats
-- [ ] Deploy to Render / Railway / Fly.io
+- [ ] Export profile as PDF or image card
+- [ ] OAuth login to view private repo stats
+- [ ] Deploy to Railway, Render, or Fly.io
 
 ---
+
+## Author
+
+**Emmanuel Wakhongola**
+- GitHub: [@WangilaWakhongola](https://github.com/WangilaWakhongola)
+- Email: wangilaemmanuel06@gmail.com
 
 ## License
 
