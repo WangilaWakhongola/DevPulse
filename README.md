@@ -1,4 +1,4 @@
-# DevPulse — GitHub Activity Dashboard
+# DevPulse : GitHub Activity Dashboard
 
 A real-time GitHub developer dashboard built with **Python & Flask**.  
 Search any GitHub username and instantly visualize their profile, repositories, language stats, and activity feed.
