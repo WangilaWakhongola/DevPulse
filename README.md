@@ -5,7 +5,6 @@ Search any GitHub username and instantly visualize their profile, repositories, 
 
 > Python rewrite of the original Node.js/Express version.
 
---
 
 ## Features
 
